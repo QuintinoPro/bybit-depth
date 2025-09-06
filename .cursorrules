@@ -1,0 +1,157 @@
+# 🤖 Cursor Rules for bybit-depth
+
+## 📋 **Project Context**
+This is a **Bybit Depth of Market (DOM) analysis system** built in Python. It connects to Bybit's WebSocket v5 API, reconstructs orderbooks in real-time, and provides advanced liquidity analysis with both CLI and Streamlit interfaces.
+
+## 🎯 **Core Functionality**
+- **WebSocket Connection**: Real-time orderbook data from Bybit (linear, inverse, spot markets)
+- **OrderBook Reconstruction**: Snapshot + delta updates with sequence validation
+- **Reactive Interface**: Streamlit dashboard with dynamic symbol/market selection
+- **Advanced CLI**: Typer-based commands for monitoring and analysis
+- **Historical Persistence**: SQLite database for orderbook snapshots
+- **Comprehensive Testing**: 14/14 tests passing with full coverage
+
+## 🏗️ **Architecture Overview**
+```
+bybit_depth/
+├── core/           # Core system (models, orderbook, websocket, aggregator, history)
+├── configs/        # Configuration (settings, symbols by market)
+├── cli/            # Command-line interface (typer commands)
+├── viz/            # Visualization (streamlit app, plotly plots)
+├── tests/          # Unit tests (models, orderbook, aggregator)
+└── utils/          # Utilities (logging, retry logic)
+```
+
+## 🔧 **Key Technologies**
+- **WebSocket**: `websockets==12.0` for real-time data
+- **Data Validation**: `pydantic>=2.7.0` for models
+- **Interface**: `streamlit>=1.35.0` + `plotly>=5.22.0`
+- **CLI**: `typer>=0.12.3` + `rich>=13.7.1`
+- **Database**: SQLite for historical data
+- **Testing**: `pytest>=8.2.0` with async support
+
+## 🚀 **Quick Start Commands**
+```bash
+# Interface visual (recomendado)
+streamlit run bybit_depth/viz/streamlit_app.py
+
+# Runner com parâmetros
+python3 -m bybit_depth.runner --symbol BTCUSDT --market linear --depth 50
+
+# Monitoramento CLI
+python3 -m bybit_depth.cli.main monitor --symbol ETHUSDT --market spot
+
+# Testes
+python3 -m pytest bybit_depth/tests/ -v
+```
+
+## 📊 **Supported Markets & Symbols**
+- **Linear**: BTCUSDT, ETHUSDT, SOLUSDT, BTC-26SEP25 (futures)
+- **Spot**: BTCUSDT, ETHUSDT, BTCUSDC, ETHUSDC
+- **Inverse**: BTCUSD, ETHUSD, SOLUSD, ADAUSD
+
+## 🎯 **Key Classes & Functions**
+
+### **OrderBook** (`core/orderbook.py`)
+```python
+book = OrderBook()
+book.apply_snapshot(bids, asks, update_id)  # Initial snapshot
+success = book.apply_delta(bids, asks, update_id)  # Delta with validation
+stats = book.get_stats()  # Complete statistics
+liq_stats = book.get_liquidity_stats(1.0)  # Liquidity analysis
+```
+
+### **WebSocket Client** (`core/ws_client.py`)
+```python
+client = BybitWSClient(symbol, depth, market)
+await client.run_forever()  # Main connection loop
+await client.wait_connected()  # Wait for connection
+```
+
+### **Symbol Parsing** (`core/models.py`)
+```python
+info = parse_symbol_type("BTCUSDT")  # {'base': 'BTC', 'quote': 'USDT', 'type': 'perpetual'}
+info = parse_symbol_type("BTC-26SEP25")  # {'base': 'BTC', 'type': 'futures', 'expiry': '26SEP25'}
+```
+
+## 🔍 **Important Patterns**
+
+### **Sequence Validation**
+- All orderbook updates must have increasing `update_id`
+- Deltas with lower/equal IDs are rejected
+- Error rate tracking for quality metrics
+
+### **Reactive Interface**
+- Use `st.session_state` for configuration persistence
+- Button-based confirmation for changes
+- Dynamic symbol filtering by market type
+
+### **Error Handling**
+- Exponential backoff for WebSocket reconnection
+- Graceful degradation for missing data
+- Comprehensive logging with structured format
+
+## 🧪 **Testing Strategy**
+- **Models**: Symbol parsing and validation
+- **OrderBook**: Sequence validation, statistics, edge cases
+- **Aggregator**: Liquidity analysis and wall detection
+- **History**: SQLite persistence and restoration
+
+## 📈 **Key Metrics**
+- **Spread**: Absolute and percentage difference
+- **Liquidity**: Volume in price bands
+- **Imbalance**: Bid/ask asymmetry
+- **Quality**: Update success rate, sequence errors
+
+## 🚨 **Common Issues & Solutions**
+
+### **Interface Not Reacting**
+- Ensure "Aplicar Configuração" button is clicked
+- Check session state persistence
+- Verify WebSocket connection status
+
+### **Sequence Validation Errors**
+- Normal for network issues
+- System auto-recovers with new snapshots
+- Monitor error rate in statistics
+
+### **Symbol Not Found**
+- Check market type compatibility
+- Verify symbol format (BTCUSDT vs BTC-26SEP25)
+- Use `python3 -m bybit_depth.cli.main symbols` to list available
+
+## 🎨 **UI Components**
+- **Sidebar**: Market/symbol selectors, configuration controls
+- **Main Area**: Real-time metrics, interactive charts, data tables
+- **Status Indicators**: Connection status, configuration applied
+- **Controls**: Apply/Stop buttons, refresh rate selection
+
+## 🔄 **Development Workflow**
+1. Make changes to code
+2. Run tests: `python3 -m pytest bybit_depth/tests/ -v`
+3. Check linting: `ruff check bybit_depth/`
+4. Test interface: `streamlit run bybit_depth/viz/streamlit_app.py`
+5. Commit and push changes
+
+## 📚 **Documentation Files**
+- `CURSOR_CONTEXT.md`: Complete project context
+- `CHANGELOG.md`: Feature history and improvements
+- `INTERFACE_GUIDE.md`: User guide for the interface
+- `README.md`: Project overview and setup
+
+## 🎯 **Code Style**
+- **Type Hints**: Required for all functions
+- **Pydantic Models**: For data validation
+- **Async/Await**: For WebSocket operations
+- **Error Handling**: Try/except with specific exceptions
+- **Logging**: Structured logging with appropriate levels
+
+## 🚀 **Performance Considerations**
+- **Decimal Precision**: Use `Decimal` for monetary calculations
+- **Memory Management**: Clean up zero/negative quantity levels
+- **Database Indexing**: SQLite indexes for historical queries
+- **WebSocket Efficiency**: Minimal reconnection attempts
+
+---
+
+**This file provides Cursor with essential context about the bybit-depth project for faster development and better code suggestions.** 🤖
